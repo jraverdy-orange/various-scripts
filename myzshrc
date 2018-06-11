@@ -1,0 +1,69 @@
+# Lines configured by zsh-newuser-install
+HISTFILE=~/.history
+HISTSIZE=10000
+SAVEHIST=10000
+setopt appendhistory autocd beep correctall
+bindkey -e
+# End of lines configured by zsh-newuser-install
+# The following lines were added by compinstall
+zstyle :compinstall filename '/home/jeremy/.zshrc'
+
+autoload -U compinit colors
+colors
+compinit
+zstyle ':completion:*:descriptions' format '%U%B%d%b%u'
+zstyle ':completion:*:warnings' format '%BSorry, no matches for: %d%b'
+zstyle ':completion:*' menu select
+
+PS1="%{$fg_bold[green]%}%n%{$reset_color%}% %{$fg[magenta]%}@%m%{$fg_bold[yellow]%} [ %~ ] %{$fg_bold[green]%}% $ %{$reset_color%}%"
+
+# key bindings
+bindkey "[H" beginning-of-line
+bindkey "[1~" beginning-of-line
+bindkey "[F" end-of-line
+bindkey "[4~" end-of-line
+bindkey "[3~" delete-char
+bindkey "[2~" quoted-insert
+#bindkey "e[5~" beginning-of-history
+#bindkey "e[6~" end-of-history
+#bindkey "e[5C" forward-word
+#bindkey "eOc" emacs-forward-word
+#bindkey "e[5D" backward-word
+#bindkey "eOd" emacs-backward-word
+#bindkey "ee[C" forward-word
+#bindkey "ee[D" backward-word
+#bindkey "^H" backward-delete-word
+
+if [ "$TMUX" = "" ]; then tmux; fi
+
+BOSH_PROXY_PORT=5666
+
+[ `netstat -nat | grep -i listen|grep ${BOSH_PROXY_PORT}|wc -l` -eq 0 ] && \
+ssh -4 -D ${BOSH_PROXY_PORT} -fNC jb
+
+export BOSH_ENVIRONMENT=bosh-jra
+export BOSH_TARGET=10.165.0.8
+export BOSH_CA_CERT=$(bosh int ~/creds/creds.yml --path /director_ssl/ca)
+export BOSH_ALL_PROXY=socks5://localhost:${BOSH_PROXY_PORT}
+
+bosh alias-env $BOSH_ENVIRONMENT -e $BOSH_TARGET --ca-cert=<(echo "$BOSH_CA_CERT")
+export PATH="$HOME/.rbenv/bin:$PATH"
+eval "$(rbenv init -)"
+
+export GOROOT=${HOME}/.goroot
+export GOPATH=${HOME}/.gopath
+
+export PATH=${GOROOT}/bin:$PATH
+
+#buckler api --ca-cert /home/jeremy/shield.ca shield https://10.165.0.21
+#export SHIELD_CORE=shield
+#export SHIELD_CORE_MASTER=5JO4T4VgtSuCEml6icI1DBJdoxpebn
+
+export LANG=en_US.UTF-8
+
+alias ls='ls --color=auto'
+alias ll='ls -l'
+alias llt='ls -altr'
+alias vi='vim'
+alias delorphan="bosh disks --orphaned --json|jq -r '.Tables[].Rows[].disk_cid'|xargs -i bosh delete-disk -n {}"
+
